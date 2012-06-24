@@ -51,11 +51,13 @@ static int setup_context()
 	return 0;
 }
 
-static void context_drain_complete(pa_context *c, void *userdata) {
+static void context_drain_complete(pa_context *c, void *userdata)
+{
     pa_context_disconnect(c);
 }
 
-static void drain(void) {
+static void drain(void)
+{
     pa_operation *o;
 
     if (!(o = pa_context_drain(context, context_drain_complete, NULL)))
@@ -64,6 +66,13 @@ static void drain(void) {
         pa_operation_unref(o);
 }
 
+static void success_cb(pa_context* c, int success, void *userdata) 
+{
+	if(!success) {
+                printf("%s\n", pa_strerror(pa_context_errno(c)));
+    		mainloop_api->quit(mainloop_api, 1);
+	}
+}
 
 static void stream_restore_cb(pa_context *c,
 		const pa_ext_stream_restore_info *info, int eol, void *userdata)
@@ -74,7 +83,6 @@ static void stream_restore_cb(pa_context *c,
 
         if(eol) {
 		drain();
- 		//mainloop_api->quit(mainloop_api, 0);
 		return;
 	}
 
@@ -89,7 +97,7 @@ static void stream_restore_cb(pa_context *c,
         o = pa_ext_stream_restore_write (context,
                                          PA_UPDATE_REPLACE,
                                          &new_info, 1,
-                                         1, NULL, NULL);
+                                         1, success_cb, NULL);
         if(o == NULL) {
                 printf("pa_ext_stream_restore_write() failed: %s\n",
                            pa_strerror(pa_context_errno(context)));
@@ -105,7 +113,7 @@ static int set_default_sink(char* name)
 {
         pa_operation *o;
 
-        o = pa_context_set_default_sink(context, name, NULL, NULL);
+        o = pa_context_set_default_sink(context, name, success_cb, NULL);
         if(o == NULL) {
 		printf("pa_context_set_default_sink() failed: %s\n",
                            pa_strerror(pa_context_errno(context)));
@@ -140,7 +148,7 @@ static void context_state_callback(pa_context *c, void *userdata)
 			break;
 
 		case PA_CONTEXT_READY:
-			printf("setting default sink to %s\n", name);
+			//printf("setting default sink to %s\n", name);
 
 			if(set_default_sink(name)) {
 				printf("set_default_sink() failed\n");
@@ -151,6 +159,7 @@ static void context_state_callback(pa_context *c, void *userdata)
 
 		case PA_CONTEXT_TERMINATED:
     			mainloop_api->quit(mainloop_api, 0);
+			break;
 
 		default:
 			printf("connection failure: %s\n",
@@ -158,7 +167,8 @@ static void context_state_callback(pa_context *c, void *userdata)
 	}
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) 
+{
 	if(setup_context()) {
 		printf("can't get pulseaudio context.\n");
 		return 1;
