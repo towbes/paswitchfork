@@ -1,3 +1,18 @@
+/* paswitch, PulseAudio commandline sink switcher
+ * Copyright (C) 2012  Tomaz Solc <tomaz.solc@tablix.org>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 #include <stdio.h>
 
 #include <pulse/pulseaudio.h>
@@ -22,16 +37,10 @@ static int setup_context()
         proplist = pa_proplist_new();
         pa_proplist_sets(proplist,
                           PA_PROP_APPLICATION_NAME,
-                          "name");
+                          "Commandline sink switcher");
         pa_proplist_sets(proplist,
                           PA_PROP_APPLICATION_ID,
-                          "id");
-        pa_proplist_sets(proplist,
-                       PA_PROP_APPLICATION_ICON_NAME,
-                       "x");
-        pa_proplist_sets(proplist,
-                       PA_PROP_APPLICATION_VERSION,
-                       "1.0");
+                          "org.tablix.paswitch");
 
 	context = pa_context_new_with_proplist(
 			mainloop_api, NULL, proplist);
@@ -169,6 +178,16 @@ static void context_state_callback(pa_context *c, void *userdata)
 
 int main(int argc, char** argv) 
 {
+	if(argc != 2) {
+		printf(
+			"PulseAudio commandline sink switcher\n"
+			"Copyright (C) 2012 by Tomaz Solc <tomaz.solc@tablix.org>\n\n"
+			"USAGE: %s [ sink ]\n",
+			argv[0]);
+
+		return 0;
+	}
+
 	if(setup_context()) {
 		printf("can't get pulseaudio context.\n");
 		return 1;
