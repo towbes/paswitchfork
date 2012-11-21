@@ -1,2 +1,7 @@
 paswitch: main.c
-	gcc -Wall -lpulse -o $@ $^
+	gcc -Wall -o $@ $^ -lpulse
+
+clean:
+	rm -f paswitch
+
+.PHONY: clean
