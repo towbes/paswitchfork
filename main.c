@@ -173,6 +173,7 @@ static void context_state_callback(pa_context *c, void *userdata)
 		default:
 			printf("connection failure: %s\n",
 					pa_strerror(pa_context_errno(c)));
+			mainloop_api->quit(mainloop_api, 1);
 	}
 }
 
